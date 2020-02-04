@@ -1,5 +1,4 @@
 import Dictionary from '@/types/Dictionary'
-import {Field} from './Field'
 import {BaseModel} from '@/models/BaseModel'
 
 type TServiceParent = Dictionary<string>
@@ -11,8 +10,6 @@ class ServiceModel extends BaseModel {
   }
 
   static parents: Array<string> = []
-
-  _fields: Dictionary<Field> = {}
 
   static get objects () {
     const ServiceClass = this.ModelManager
@@ -37,7 +34,6 @@ class ServiceModel extends BaseModel {
     async get (id: string, parents?: TServiceParent): Promise<ServiceModel> {
       const Model = this.model
       Model.checkServiceParents(parents)
-      console.log('get called', id, parents)
       return new Model()
     }
 

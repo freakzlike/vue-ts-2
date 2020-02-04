@@ -1,4 +1,5 @@
 import LazyValue from '@/types/LazyValue'
+import cu from '@/utils/common'
 
 interface FieldDef {
   attributeName?: string,
@@ -23,6 +24,22 @@ class Field {
   bind (fieldName: string): Field {
     const FieldClass = <typeof Field> this.constructor
     return new FieldClass(this._def, fieldName)
+  }
+
+  /**
+   * Field label
+   * @returns {Promise<string>}
+   */
+  get label (): Promise<string> {
+    return cu.promiseEval(this._def.label, this)
+  }
+
+  /**
+   * Field hint
+   * @returns {Promise<string>}
+   */
+  get hint (): Promise<string> {
+    return cu.promiseEval(this._def.hint, this)
   }
 }
 

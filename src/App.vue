@@ -8,32 +8,26 @@
 
 <script lang="ts">
   import {Component, Vue} from 'vue-property-decorator'
-  import {ServiceModel, TServiceParent} from '@/models/ServiceModel'
+  import {ServiceModel} from '@/models/ServiceModel'
   import {CharField, UUIDField} from '@/models/Field'
 
   class Item extends ServiceModel {
+    static keyName = 'AppItem'
     static parents = ['instance']
 
-    static fields = {
+    static fieldsDef = {
       id: new UUIDField(),
-      name: new CharField()
-    }
-
-    static ModelManager = class extends ServiceModel.ModelManager {
-      async get (id: string, parents?: TServiceParent): Promise<ServiceModel> {
-        const Model = this.model
-        Model.checkServiceParents(parents)
-        console.log('get called from item', id, parents)
-        return new Model()
-      }
+      name: new CharField({label: 'Name'})
     }
   }
 
   @Component
   export default class App extends Vue {
+    item: Item | null = null
+
     created () {
       Item.objects.get('1', {instance: 'text'}).then(obj => {
-        console.log('obj', obj)
+        this.item = obj
       })
     }
   }
