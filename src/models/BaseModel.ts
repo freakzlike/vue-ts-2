@@ -3,11 +3,11 @@ import {BaseClass} from '@/models/BaseClass'
 import {Field} from './Field'
 
 class BaseModel extends BaseClass {
-  static keyName: string
-  static fieldsDef: Dictionary<Field> = {}
+  public static keyName: string
+  public static fieldsDef: Dictionary<Field> = {}
 
-  _data: Dictionary<any>
-  _fields: Dictionary<Field> = {}
+  protected _data: Dictionary<any>
+  protected _fields: Dictionary<Field> = {}
 
   constructor (data: Dictionary<any> = {}) {
     super()
@@ -20,7 +20,15 @@ class BaseModel extends BaseClass {
     this._bindFields()
   }
 
-  _bindFields () {
+  public get val () {
+    return new Proxy(this, {
+      get (target: any, name: string) {
+        return target._data[name]
+      }
+    })
+  }
+
+  protected _bindFields () {
     this._fields = {}
 
     const fields = this.cls.fieldsDef
