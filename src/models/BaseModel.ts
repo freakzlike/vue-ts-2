@@ -5,6 +5,7 @@ import {Field} from './Field'
 class BaseModel extends BaseClass {
   public static keyName: string
   public static fieldsDef: Dictionary<Field> = {}
+  protected static _modelRegistered: boolean = false
 
   protected _data: Dictionary<any>
   protected _fields: Dictionary<Field> = {}
@@ -17,10 +18,14 @@ class BaseModel extends BaseClass {
       console.warn('Missing keyName for Model', this.constructor.name)
     }
 
+    if (!this.cls._modelRegistered) {
+      console.warn('Model is not registered', this.constructor.name)
+    }
+
     this._bindFields()
   }
 
-  public get val () {
+  public get val (): Dictionary<any> {
     return new Proxy(this, {
       get (target: any, name: string) {
         return target._data[name]
@@ -36,6 +41,13 @@ class BaseModel extends BaseClass {
       const field = fields[fieldName].clone()
       this._fields[fieldName] = field.bind(fieldName)
     }
+  }
+
+  public static register (): boolean {
+    if (this._modelRegistered) return false
+
+    this._modelRegistered = true
+    return true
   }
 }
 

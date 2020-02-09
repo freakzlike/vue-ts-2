@@ -20,6 +20,7 @@
       name: new CharField({label: 'Name'})
     }
   }
+  Item.register()
 
   @Component
   export default class App extends Vue {
@@ -29,6 +30,9 @@
       Item.objects.get('1', {instance: 'text'}).then(obj => {
         this.item = obj
       })
+
+      const item = new Item({jste: 98})
+      console.log('x', item.val.jste)
     }
   }
 </script>
