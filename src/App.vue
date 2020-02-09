@@ -1,5 +1,27 @@
 <template>
   <v-app>
+    <v-navigation-drawer permanent app expand-on-hover>
+      <v-list>
+        <v-list-item link exact :to="{name: 'home'}">
+          <v-list-item-icon>
+            <v-icon>mdi-home</v-icon>
+          </v-list-item-icon>
+          <v-list-item-title>Home</v-list-item-title>
+        </v-list-item>
+      </v-list>
+
+      <v-divider/>
+
+      <v-list nav dense>
+        <v-list-item link :to="{name: 'app:PostListView'}">
+          <v-list-item-icon>
+            <v-icon>mdi-post</v-icon>
+          </v-list-item-icon>
+          <v-list-item-title>Posts</v-list-item-title>
+        </v-list-item>
+      </v-list>
+    </v-navigation-drawer>
+
     <v-content>
       <router-view/>
     </v-content>
@@ -8,31 +30,8 @@
 
 <script lang="ts">
   import {Component, Vue} from 'vue-property-decorator'
-  import {ServiceModel} from '@/models/ServiceModel'
-  import {CharField, UUIDField} from '@/models/Field'
-
-  class Item extends ServiceModel {
-    static keyName = 'AppItem'
-    static parents = ['instance']
-
-    static fieldsDef = {
-      id: new UUIDField(),
-      name: new CharField({label: 'Name'})
-    }
-  }
-  Item.register()
 
   @Component
   export default class App extends Vue {
-    item: Item | null = null
-
-    created () {
-      Item.objects.get('1', {instance: 'text'}).then(obj => {
-        this.item = obj
-      })
-
-      const item = new Item({jste: 98})
-      console.log('x', item.val.jste)
-    }
   }
 </script>

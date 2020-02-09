@@ -1,18 +1,42 @@
 import Dictionary from '@/types/Dictionary'
 import {BaseModel} from '@/models/BaseModel'
 import store from '@/store'
-import {serviceStore} from '@/store/modules/serviceStore'
+import {serviceStore, ServiceStoreOptions} from '@/store/modules/serviceStore'
+import axios from '@/plugins/axios'
 
 type TServiceParent = Dictionary<string>
 
 class ServiceModel extends BaseModel {
   static urls: {
-    LIST: string
-    DETAIL: string
+    BASE?: string | null
+    LIST?: string | null,
+    DETAIL?: string | null
   }
 
   static parents: Array<string> = []
   static storeModule: typeof serviceStore = serviceStore
+
+  static getListUrl (parents?: TServiceParent): string {
+    if (this.urls.LIST) {
+      return this.urls.LIST
+    } else if (this.urls.BASE) {
+      return this.urls.BASE
+    } else {
+      console.warn('Missing url configuration')
+      return ''
+    }
+  }
+
+  static getDetailUrl (id: string, parents?: TServiceParent): string {
+    if (this.urls.DETAIL) {
+      return this.urls.DETAIL
+    } else if (this.urls.BASE) {
+      return this.urls.BASE + id + '/'
+    } else {
+      console.warn('Missing url configuration')
+      return ''
+    }
+  }
 
   static get objects () {
     const ServiceClass = this.ModelManager
@@ -26,27 +50,42 @@ class ServiceModel extends BaseModel {
       this.model = model
     }
 
-    async all (parents?: TServiceParent): Promise<Array<ServiceModel>> {
-      const Model = this.model
-      return [
-        new Model(),
-        new Model()
-      ]
+    public async all (parents?: TServiceParent): Promise<Array<ServiceModel>> {
+      return this.filter({}, parents)
     }
 
-    async get (id: string, parents?: TServiceParent): Promise<ServiceModel> {
+    public async get (id: string, parents?: TServiceParent): Promise<ServiceModel> {
       const Model = this.model
       Model.checkServiceParents(parents)
-      const data = await Model.storeDispatch('getData', {id, parents})
+
+      const options: ServiceStoreOptions = {
+        key: 'detail#' + id,
+        sendRequest: async (options: ServiceStoreOptions): Promise<Array<Dictionary<any>>> => {
+          const response = await axios.get(this.model.getDetailUrl(id, parents))
+
+          return response.data
+        }
+      }
+
+      const data: Dictionary<any> = await await Model.storeDispatch('getData', options)
       return new Model(data)
     }
 
-    async filter (parents?: TServiceParent): Promise<Array<ServiceModel>> {
+    public async filter (filterParams: Dictionary<any>, parents?: TServiceParent): Promise<Array<ServiceModel>> {
       const Model = this.model
-      return [
-        new Model(),
-        new Model()
-      ]
+      Model.checkServiceParents(parents)
+
+      const options: ServiceStoreOptions = {
+        key: 'list#' + JSON.stringify(filterParams),
+        sendRequest: async (options: ServiceStoreOptions): Promise<Array<Dictionary<any>>> => {
+          const response = await axios.get(this.model.getListUrl(parents))
+
+          return response.data
+        }
+      }
+
+      const dataList: Array<Dictionary<any>> = await await Model.storeDispatch('getData', options)
+      return dataList.map(data => new Model(data))
     }
   }
 
