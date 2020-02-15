@@ -8,8 +8,8 @@ interface FieldDef {
 }
 
 class Field {
-  _name: (string | null) = null
-  _def: FieldDef
+  protected _name: (string | null) = null
+  protected _def: FieldDef
 
   constructor (def: FieldDef = {}, fieldName: (string | null) = null) {
     this._def = def
@@ -30,7 +30,7 @@ class Field {
    * Field label
    * @returns {Promise<string>}
    */
-  get label (): Promise<string> {
+  public get label (): Promise<string> {
     return cu.promiseEval(this._def.label, this)
   }
 
@@ -38,7 +38,7 @@ class Field {
    * Field hint
    * @returns {Promise<string>}
    */
-  get hint (): Promise<string> {
+  public get hint (): Promise<string> {
     return cu.promiseEval(this._def.hint, this)
   }
 }

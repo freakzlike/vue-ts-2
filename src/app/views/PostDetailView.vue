@@ -51,13 +51,12 @@
       this.loadPost()
     }
 
-    loadPost () {
+    async loadPost () {
       this.dataStatus = false
       this.post = null
-      Post.objects.get(this.id).then(data => {
-        this.dataStatus = true
-        this.post = data
-      })
+
+      this.post = await Post.objects.get(this.id)
+      this.dataStatus = true
     }
   }
 </script>

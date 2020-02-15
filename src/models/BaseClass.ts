@@ -1,11 +1,21 @@
 import Dictionary from '@/types/Dictionary'
 
+/**
+ * BaseClass
+ */
 class BaseClass {
-  get cls (): Dictionary<any> {
+  /**
+   * Getter to retrieve static class definition
+   */
+  public get cls (): Dictionary<any> {
     return this.constructor
   }
 
-  static get cls (): Dictionary<any> {
+  // noinspection JSUnusedGlobalSymbols
+  /**
+   * Getter to retrieve static class definition
+   */
+  public static get cls (): Dictionary<any> {
     return this.constructor
   }
 }
