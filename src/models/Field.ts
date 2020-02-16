@@ -31,7 +31,7 @@ class Field extends BaseClass {
     this._name = fieldName
   }
 
-  clone (): Field {
+  public clone (): Field {
     const FieldClass = <typeof Field> this.constructor
     return new FieldClass(this._def, this._name)
   }
@@ -40,7 +40,7 @@ class Field extends BaseClass {
    * Bind field with field name and return a new instance
    * @param fieldName
    */
-  bind (fieldName: string): Field {
+  public bind (fieldName: string): Field {
     const FieldClass = <typeof Field> this.constructor
     return new FieldClass(this._def, fieldName)
   }
@@ -60,14 +60,14 @@ class Field extends BaseClass {
    * Name of attribute in data
    * @returns {String}
    */
-  get attributeName (): string {
+  public get attributeName (): string {
     return this._def.attributeName || this.name
   }
 
   /**
    * Field definition
    */
-  get definition (): FieldDef {
+  public get definition (): FieldDef {
     return this._def
   }
 
