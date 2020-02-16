@@ -1,5 +1,5 @@
-import {BaseModel} from '@/models/BaseModel'
-import {Field} from '@/models/Field'
+import {BaseModel, NotDeclaredFieldException} from '@/models/BaseModel'
+import {Field, FieldNotBoundException} from '@/models/Field'
 
 describe('models/BaseModel.js', () => {
   describe('constructor', () => {
@@ -61,7 +61,7 @@ describe('models/BaseModel.js', () => {
 
     it('should create BaseModel and bind fields', () => {
       const testField = new Field()
-      expect(testField.name).toBeNull()
+      expect(() => testField.name).toThrow(FieldNotBoundException)
 
       class Field1 extends Field {
       }
@@ -79,7 +79,7 @@ describe('models/BaseModel.js', () => {
 
       const model = new TestModel()
 
-      expect(testField.name).toBeNull()
+      expect(() => testField.name).toThrow(FieldNotBoundException)
 
       const fields = model.fields
       expect(fields).not.toBeNull()
@@ -130,8 +130,34 @@ describe('models/BaseModel.js', () => {
       const model = new TestModel(data)
       expect(model.val.name).toBe(data.name)
       expect(model.val.obj).toBe(data.obj)
-      expect(model.val.description).toBeUndefined()
-      expect(model.val.no_field).toBeUndefined()
+      expect(model.val.description).toBeNull()
+      expect(() => model.val.no_field).toThrow(NotDeclaredFieldException)
+    })
+  })
+
+  describe('getField', () => {
+    class NameField extends Field {
+    }
+
+    class TestModel extends BaseModel {
+      public static keyName = 'TestModel'
+      protected static fieldsDef = {
+        name: new NameField()
+      }
+    }
+
+    TestModel.register()
+
+    const model = new TestModel()
+
+    it('should return field', () => {
+      const field = model.getField('name')
+      expect(field).toBeInstanceOf(NameField)
+      expect(field.name).toBe('name')
+    })
+
+    it('should throw NotDeclaredFieldException', () => {
+      expect(() => model.getField('not_declared')).toThrow(NotDeclaredFieldException)
     })
   })
 })
