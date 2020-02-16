@@ -55,6 +55,20 @@ class BaseModel extends BaseClass {
   }
 
   /**
+   * Data containing values
+   */
+  public get data (): Dictionary<any> {
+    return this._data
+  }
+
+  /**
+   * Bound dictionary of fields by field name
+   */
+  public get fields (): Dictionary<Field> {
+    return this._fields
+  }
+
+  /**
    * Getter with values to return data of model
    * Can be accessed as object (e.g. for field name 'description': val.description)
    */
@@ -69,15 +83,13 @@ class BaseModel extends BaseClass {
 
   /**
    * Bind fields from fieldsDef to _fields
-   * @private
    */
   protected _bindFields (): void {
     this._fields = {}
 
     const fields = this.cls.fieldsDef
     for (const fieldName of Object.keys(fields)) {
-      const field = fields[fieldName].clone()
-      this._fields[fieldName] = field.bind(fieldName)
+      this._fields[fieldName] = fields[fieldName].bind(fieldName)
     }
   }
 

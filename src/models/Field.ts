@@ -27,8 +27,14 @@ class Field {
   }
 
   /**
+   * Field name
+   */
+  public get name (): string | null {
+    return this._name
+  }
+
+  /**
    * Field label
-   * @returns {Promise<string>}
    */
   public get label (): Promise<string> {
     return cu.promiseEval(this._def.label, this)
@@ -36,7 +42,6 @@ class Field {
 
   /**
    * Field hint
-   * @returns {Promise<string>}
    */
   public get hint (): Promise<string> {
     return cu.promiseEval(this._def.hint, this)
