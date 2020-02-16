@@ -1,4 +1,4 @@
-import {ServiceModel, TServiceParent} from '@/models/ServiceModel'
+import {ServiceModel, ServiceParent} from '@/models/ServiceModel'
 import {CharField, UUIDField} from '@/models/Field'
 
 class Post extends ServiceModel {

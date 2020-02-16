@@ -1,10 +1,10 @@
 import {Module} from 'vuex/types'
 
-export interface IRootState {
+export interface RootState {
 }
 
-export interface IDefaultState {
+export interface DefaultState {
 }
 
-export interface IDefaultModule<S> extends Module<S, IRootState> {
+export interface DefaultModule<S> extends Module<S, RootState> {
 }

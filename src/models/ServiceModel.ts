@@ -1,10 +1,10 @@
 import Dictionary from '@/types/Dictionary'
 import {BaseModel} from '@/models/BaseModel'
 import store from '@/store'
-import {serviceStore, ServiceStoreOptions} from '@/store/modules/serviceStore'
+import {ServiceStoreFactory, ServiceStore, ServiceStoreOptions} from '@/models/ServiceStoreFactory'
 import axios from '@/plugins/axios'
 
-type TServiceParent = Dictionary<string>
+type ServiceParent = Dictionary<string>
 
 /**
  * ServiceModel
@@ -27,15 +27,20 @@ class ServiceModel extends BaseModel {
   protected static parents: Array<string> = []
 
   /**
-   * Vuex store module to use
+   * Duration to cache requested data in seconds. 0: no cache. null: Cache forever
    */
-  protected static storeModule: typeof serviceStore = serviceStore
+  protected static cacheDuration: number | null = 30
+
+  /**
+   * Vuex store module factory to use
+   */
+  protected static storeFactory: typeof ServiceStoreFactory = ServiceStoreFactory
 
   /**
    * Function to return list url of model according to parents
    * @param parents
    */
-  public static getListUrl (parents?: TServiceParent): string {
+  public static getListUrl (parents?: ServiceParent): string {
     if (this.urls.LIST) {
       return this.urls.LIST
     } else if (this.urls.BASE) {
@@ -51,7 +56,7 @@ class ServiceModel extends BaseModel {
    * @param id
    * @param parents
    */
-  public static getDetailUrl (id: string, parents?: TServiceParent): string {
+  public static getDetailUrl (id: string, parents?: ServiceParent): string {
     if (this.urls.DETAIL) {
       return this.urls.DETAIL
     } else if (this.urls.BASE) {
@@ -84,7 +89,7 @@ class ServiceModel extends BaseModel {
      * Retrieve list of all model instances
      * @param parents
      */
-    public async all (parents?: TServiceParent): Promise<Array<ServiceModel>> {
+    public async all (parents?: ServiceParent): Promise<Array<ServiceModel>> {
       return this.filter({}, parents)
     }
 
@@ -93,7 +98,7 @@ class ServiceModel extends BaseModel {
      * @param id
      * @param parents
      */
-    public async get (id: string, parents?: TServiceParent): Promise<ServiceModel> {
+    public async get (id: string, parents?: ServiceParent): Promise<ServiceModel> {
       const Model = this.model
       Model.checkServiceParents(parents)
 
@@ -115,7 +120,7 @@ class ServiceModel extends BaseModel {
      * @param filterParams
      * @param parents
      */
-    public async filter (filterParams: Dictionary<any>, parents?: TServiceParent): Promise<Array<ServiceModel>> {
+    public async filter (filterParams: Dictionary<any>, parents?: ServiceParent): Promise<Array<ServiceModel>> {
       const Model = this.model
       Model.checkServiceParents(parents)
 
@@ -139,7 +144,7 @@ class ServiceModel extends BaseModel {
    * Check whether all required parent values have been given
    * @param parents
    */
-  protected static checkServiceParents (parents: TServiceParent = {}): boolean {
+  protected static checkServiceParents (parents: ServiceParent = {}): boolean {
     if (this.parents.length < Object.keys(parents).length) {
       if (Object.keys(parents).length > 0) {
         console.warn('Too much parents given', this.constructor.name, parents)
@@ -164,7 +169,7 @@ class ServiceModel extends BaseModel {
       console.warn('Missing keyName for Model', this.constructor.name)
     }
 
-    return 'service' + this.keyName
+    return 'service/' + this.keyName
   }
 
   /**
@@ -183,9 +188,16 @@ class ServiceModel extends BaseModel {
   public static register (): boolean {
     if (!super.register()) return false
 
-    store.registerModule(this.storeName, this.storeModule)
+    store.registerModule(this.storeName, this.createStoreModule())
     return true
+  }
+
+  /**
+   * Create vuex store module from storeFactory
+   */
+  protected static createStoreModule (): ServiceStore {
+    return this.storeFactory(this.cacheDuration)
   }
 }
 
-export {ServiceModel, TServiceParent}
+export {ServiceModel, ServiceParent}
