@@ -8,6 +8,8 @@ class Post extends ServiceModel {
     BASE: 'https://jsonplaceholder.typicode.com/posts/'
   }
 
+  static cacheDuration = 5
+
   static fieldsDef = {
     id: new UUIDField(),
     title: new CharField({label: 'Title'}),
