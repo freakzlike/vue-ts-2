@@ -281,15 +281,25 @@ describe('utils/common.js', () => {
       expect(cu.deepCompare(['1', 1], ['1', 1])).toBe(true)
       expect(cu.deepCompare([{}], [{}])).toBe(true)
       expect(cu.deepCompare([{a: 1}], [{a: 1}])).toBe(true)
+      expect(cu.deepCompare({
+        method () {
+        }
+      }, {
+        method () {
+        }
+      })).toBe(true)
     })
 
     it('should not be equal', () => {
       expect(cu.deepCompare(1, 2)).toBe(false)
+      expect(cu.deepCompare(1, null)).toBe(false)
       expect(cu.deepCompare('1', '2')).toBe(false)
       expect(cu.deepCompare({}, {a: 1})).toBe(false)
       expect(cu.deepCompare({a: 1}, {})).toBe(false)
       expect(cu.deepCompare({a: 1}, {a: 2})).toBe(false)
       expect(cu.deepCompare({a: 2}, {a: 1})).toBe(false)
+      expect(cu.deepCompare({a: 2}, {b: 2})).toBe(false)
+      expect(cu.deepCompare({a: {b: 1}}, {a: {c: 1}})).toBe(false)
       expect(cu.deepCompare([], [1])).toBe(false)
       expect(cu.deepCompare([1], [])).toBe(false)
       expect(cu.deepCompare([], ['1'])).toBe(false)
@@ -302,6 +312,13 @@ describe('utils/common.js', () => {
       expect(cu.deepCompare([], {})).toBe(false)
       expect(cu.deepCompare({a: 1}, [1])).toBe(false)
       expect(cu.deepCompare([1], {a: 1})).toBe(false)
+      expect(cu.deepCompare({
+        method: function x () {
+        }
+      }, {
+        method: function y () {
+        }
+      })).toBe(false)
     })
   })
 
@@ -331,6 +348,7 @@ describe('utils/common.js', () => {
 
     it('should eval function context', () => {
       let expectedContext: Object | undefined = {}
+
       function func (this: any, ...args: Array<any>) {
         expect(this).toBe(expectedContext)
         return args
@@ -361,10 +379,12 @@ describe('utils/common.js', () => {
 
     it('should eval function', async () => {
       let expectedContext: Object | null | undefined
+
       function func (this: any, ...args: Array<any>) {
         expect(this).toBe(expectedContext)
         return args
       }
+
       function promiseFunc (this: any, ...args: Array<any>) {
         expect(this).toBe(expectedContext)
         return new Promise(resolve => resolve(args))

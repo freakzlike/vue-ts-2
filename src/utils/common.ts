@@ -36,10 +36,8 @@ const funcs = {
       return obj
     }
     const copy = obj.constructor()
-    for (const attr in obj) {
-      if (Object.prototype.hasOwnProperty.call(obj, attr)) {
-        copy[attr] = funcs.clone(obj[attr])
-      }
+    for (const attr of Object.keys(obj)) {
+      copy[attr] = funcs.clone(obj[attr])
     }
     return copy
   },
@@ -56,15 +54,13 @@ const funcs = {
     const source = sources.shift()
 
     if (source && funcs.isObject(target) && funcs.isObject(source)) {
-      for (const key in source) {
-        if (Object.prototype.hasOwnProperty.call(source, key)) {
-          const value: any = source[key]
-          if (funcs.isObject(value)) {
-            if (!target[key]) Object.assign(target, {[key]: {}})
-            funcs.mergeDeep(target[key], value)
-          } else {
-            Object.assign(target, {[key]: value})
-          }
+      for (const key of Object.keys(source)) {
+        const value: any = source[key]
+        if (funcs.isObject(value)) {
+          if (!target[key]) Object.assign(target, {[key]: {}})
+          funcs.mergeDeep(target[key], value)
+        } else {
+          Object.assign(target, {[key]: value})
         }
       }
     }
@@ -85,33 +81,31 @@ const funcs = {
     if (Array.isArray(obj1) !== Array.isArray(obj2)) return false
     if (funcs.isObject(obj1, true) !== funcs.isObject(obj2, true)) return false
     if (!funcs.isObject(obj1, true)) {
-      // Primitive objects! -> Simple compare with: !==
-      if (obj1 !== obj2) return false
+      // Primitive objects! -> Simple compare with: ===
+      return obj1 === obj2
     }
     if (Object.keys(obj1).length !== Object.keys(obj2).length) return false
 
-    for (const p in obj1) {
-      if (Object.prototype.hasOwnProperty.call(obj1, p)) {
-        if (!Object.prototype.hasOwnProperty.call(obj2, p)) {
-          return false
-        }
+    for (const p of Object.keys(obj1)) {
+      if (!Object.prototype.hasOwnProperty.call(obj2, p)) {
+        return false
+      }
 
-        switch (typeof (obj1[p])) {
-          case 'object':
-            if (!funcs.deepCompare(obj1[p], obj2[p])) {
-              return false
-            }
-            break
-          case 'function':
-            if (typeof (obj2[p]) === 'undefined' || (obj1[p].toString() !== obj2[p].toString())) {
-              return false
-            }
-            break
-          default:
-            if (obj1[p] !== obj2[p]) {
-              return false
-            }
-        }
+      switch (typeof (obj1[p])) {
+        case 'object':
+          if (!funcs.deepCompare(obj1[p], obj2[p])) {
+            return false
+          }
+          break
+        case 'function':
+          if (typeof (obj2[p]) === 'undefined' || (obj1[p].toString() !== obj2[p].toString())) {
+            return false
+          }
+          break
+        default:
+          if (obj1[p] !== obj2[p]) {
+            return false
+          }
       }
     }
 
