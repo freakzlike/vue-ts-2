@@ -1,6 +1,6 @@
 import {BaseClass} from '@/models/BaseClass'
 
-describe('models/BaseClass.js', () => {
+describe('models/BaseClass', () => {
   describe('cls', () => {
     it('should return class on static', () => {
       expect(BaseClass.cls).toBe(BaseClass.constructor)

@@ -1,7 +1,7 @@
 import {BaseModel, NotDeclaredFieldException} from '@/models/BaseModel'
 import {Field, FieldNotBoundException} from '@/models/Field'
 
-describe('models/BaseModel.js', () => {
+describe('models/BaseModel', () => {
   describe('constructor', () => {
     it('should create BaseModel with data', () => {
       const spy = jest.spyOn(console, 'warn').mockImplementation()

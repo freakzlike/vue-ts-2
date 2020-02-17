@@ -1,6 +1,6 @@
 import {Field, FieldDef, FieldNotBoundException} from '@/models/Field'
 
-describe('models/Field.js', () => {
+describe('models/Field', () => {
   describe('constructor', () => {
     it('should create correct Field without field name', () => {
       const def = {}
