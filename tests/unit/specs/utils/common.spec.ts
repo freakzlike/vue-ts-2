@@ -404,4 +404,21 @@ describe('utils/common.js', () => {
       expect(await cu.promiseEval(promiseFunc, expectedContext, 1, null, 3, 4)).toEqual([1, null, 3, 4])
     })
   })
+
+  /**
+   * format
+   */
+  describe('format', () => {
+    it('should format string', async () => {
+      expect(cu.format('Test string {value}', {value: 5})).toBe('Test string 5')
+      expect(cu.format('Test {value1} string {value2}', {
+        value1: 1,
+        value2: 'string value'
+      })).toBe('Test 1 string string value')
+
+      expect(cu.format('Test {value1} string {value2} {value1}', {
+        value1: 1
+      })).toBe('Test 1 string {value2} 1')
+    })
+  })
 })

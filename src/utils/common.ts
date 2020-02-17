@@ -134,6 +134,17 @@ const funcs = {
     return Promise.resolve(funcs.eval(value, context, ...args))
   },
 
+  /**
+   * Format string with placeholders
+   * E.g. "Test String {value}" + {value: 5} = "Test String 5"
+   * https://stackoverflow.com/questions/610406/javascript-equivalent-to-printf-string-format/18234317
+   */
+  format (str: string, args: Dictionary<any>): string {
+    return Object.keys(args).reduce((_str: string, key: string): string => {
+      return _str.replace(new RegExp(`\\{${key}\\}`, 'gi'), args[key])
+    }, str.toString())
+  },
+
   NO_VALUE: {}
 }
 
