@@ -1,10 +1,17 @@
 import Dictionary from '@/types/Dictionary'
 import {BaseModel} from '@/models/BaseModel'
+import cu from '@/utils/common'
 import store from '@/store'
 import {ServiceStoreFactory, ServiceStore, ServiceStoreOptions} from '@/models/ServiceStoreFactory'
 import axios from '@/plugins/axios'
 
-type ServiceParent = Dictionary<string>
+type ServiceParent = Dictionary<string | number>
+
+class MissingUrlException extends Error {
+  constructor (modelName: string) {
+    super('Missing url configuration in Model "' + modelName + '"')
+  }
+}
 
 /**
  * ServiceModel
@@ -19,7 +26,7 @@ class ServiceModel extends BaseModel {
     BASE?: string | null
     LIST?: string | null,
     DETAIL?: string | null
-  }
+  } = {}
 
   /**
    * List of parent names to be used in url
@@ -40,31 +47,48 @@ class ServiceModel extends BaseModel {
    * Function to return list url of model according to parents
    * @param parents
    */
-  public static getListUrl (parents?: ServiceParent): string {
-    if (this.urls.LIST) {
-      return this.urls.LIST
-    } else if (this.urls.BASE) {
-      return this.urls.BASE
+  public static async getListUrl (parents?: ServiceParent): Promise<string> {
+    this.checkServiceParents(parents)
+
+    const url: string = (() => {
+      if (this.urls.LIST) {
+        return this.urls.LIST
+      } else if (this.urls.BASE) {
+        return this.urls.BASE
+      } else {
+        throw new MissingUrlException(this.name)
+      }
+    })()
+
+    if (parents) {
+      return cu.format(url, parents)
     } else {
-      console.warn('Missing url configuration')
-      return ''
+      return url
     }
   }
 
   /**
    * Function to return detail url of model according to parents
-   * @param id
+   * @param pk
    * @param parents
    */
-  public static getDetailUrl (id: string, parents?: ServiceParent): string {
-    if (this.urls.DETAIL) {
-      return this.urls.DETAIL
-    } else if (this.urls.BASE) {
-      return this.urls.BASE + id + '/'
-    } else {
-      console.warn('Missing url configuration')
-      return ''
-    }
+  public static async getDetailUrl (pk: string | number, parents?: ServiceParent): Promise<string> {
+    this.checkServiceParents(parents)
+
+    const url: string = (() => {
+      if (this.urls.DETAIL) {
+        return this.urls.DETAIL
+      } else if (this.urls.BASE) {
+        return this.urls.BASE + '{pk}/'
+      } else {
+        throw new MissingUrlException(this.name)
+      }
+    })()
+
+    return cu.format(url, {
+      pk,
+      ...parents || {}
+    })
   }
 
   /**
@@ -95,17 +119,18 @@ class ServiceModel extends BaseModel {
 
     /**
      * Retrieve specific model instance
-     * @param id
+     * @param pk
      * @param parents
      */
-    public async get (id: string, parents?: ServiceParent): Promise<ServiceModel> {
+    public async get (pk: string | number, parents?: ServiceParent): Promise<ServiceModel> {
       const Model = this.model
       Model.checkServiceParents(parents)
 
       const options: ServiceStoreOptions = {
-        key: 'detail#' + id,
+        key: 'detail#' + pk.toString(),
         sendRequest: async (options: ServiceStoreOptions): Promise<Array<Dictionary<any>>> => {
-          const response = await axios.get(this.model.getDetailUrl(id, parents))
+          const url = await this.model.getDetailUrl(pk, parents)
+          const response = await axios.get(url)
 
           return response.data
         }
@@ -129,7 +154,8 @@ class ServiceModel extends BaseModel {
       const options: ServiceStoreOptions = {
         key: filterKey,
         sendRequest: async (options: ServiceStoreOptions): Promise<Array<Dictionary<any>>> => {
-          const response = await axios.get(this.model.getListUrl(parents))
+          const url = await this.model.getListUrl(parents)
+          const response = await axios.get(url)
 
           return response.data
         }
@@ -146,14 +172,12 @@ class ServiceModel extends BaseModel {
    */
   protected static checkServiceParents (parents: ServiceParent = {}): boolean {
     if (this.parents.length < Object.keys(parents).length) {
-      if (Object.keys(parents).length > 0) {
-        console.warn('Too much parents given', this.constructor.name, parents)
-        return false
-      }
+      console.warn('Too much parents given', this.name, parents)
+      return false
     } else if (this.parents.length > 0) {
       const missingParents = this.parents.filter(name => !parents[name])
       if (missingParents.length) {
-        console.warn('Missing parents', this.constructor.name, missingParents)
+        console.warn('Missing parents', this.name, missingParents)
         return false
       }
     }
@@ -166,10 +190,10 @@ class ServiceModel extends BaseModel {
    */
   public static get storeName (): string {
     if (!this.keyName) {
-      console.warn('Missing keyName for Model', this.constructor.name)
+      console.warn('Missing keyName for Model', this.name)
     }
-
-    return 'service/' + this.keyName
+    const keyName = this.keyName || this.name
+    return 'service/' + keyName
   }
 
   /**
@@ -200,4 +224,4 @@ class ServiceModel extends BaseModel {
   }
 }
 
-export {ServiceModel, ServiceParent}
+export {ServiceModel, ServiceParent, MissingUrlException}
