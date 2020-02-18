@@ -1,5 +1,10 @@
+import cu from '@/utils/common'
 import store from '@/store'
+import axios from '@/plugins/axios'
 import {ServiceModel, MissingUrlException, ServiceParent} from '@/models/ServiceModel'
+import {Field} from '@/models/Field'
+
+jest.mock('axios')
 
 describe('models/ServiceModel', () => {
   describe('getListUrl', () => {
@@ -11,10 +16,6 @@ describe('models/ServiceModel', () => {
           BASE: 'base-url/',
           LIST: listUrl,
           DETAIL: 'detail-url/'
-        }
-
-        public static checkServiceParents (parents: ServiceParent = {}): boolean {
-          return true
         }
       }
 
@@ -118,9 +119,6 @@ describe('models/ServiceModel', () => {
   describe('checkServiceParents', () => {
     it('should check no parents', async () => {
       class TestModel extends ServiceModel {
-        public static checkServiceParents (parents: ServiceParent = {}): boolean {
-          return super.checkServiceParents(parents)
-        }
       }
 
       const spy = jest.spyOn(console, 'warn').mockImplementation()
@@ -132,10 +130,6 @@ describe('models/ServiceModel', () => {
     it('should check correct parents given', async () => {
       class TestModel extends ServiceModel {
         protected static parents = ['parent1', 'parent2']
-
-        public static checkServiceParents (parents: ServiceParent = {}): boolean {
-          return super.checkServiceParents(parents)
-        }
       }
 
       const spy = jest.spyOn(console, 'warn').mockImplementation()
@@ -147,10 +141,6 @@ describe('models/ServiceModel', () => {
     it('should check parents not given', async () => {
       class TestModel extends ServiceModel {
         protected static parents = ['parent1', 'parent2']
-
-        public static checkServiceParents (parents: ServiceParent = {}): boolean {
-          return super.checkServiceParents(parents)
-        }
       }
 
       const spy = jest.spyOn(console, 'warn').mockImplementation()
@@ -166,10 +156,6 @@ describe('models/ServiceModel', () => {
     it('should check missing parent', async () => {
       class TestModel extends ServiceModel {
         protected static parents = ['parent1', 'parent2']
-
-        public static checkServiceParents (parents: ServiceParent = {}): boolean {
-          return super.checkServiceParents(parents)
-        }
       }
 
       const parents: ServiceParent = {parent1: 10}
@@ -185,9 +171,6 @@ describe('models/ServiceModel', () => {
 
     it('should check parents given no parents defined', async () => {
       class TestModel extends ServiceModel {
-        public static checkServiceParents (parents: ServiceParent = {}): boolean {
-          return super.checkServiceParents(parents)
-        }
       }
 
       const parents: ServiceParent = {parent1: 10}
@@ -204,10 +187,6 @@ describe('models/ServiceModel', () => {
     it('should check parents too much parents given', async () => {
       class TestModel extends ServiceModel {
         protected static parents = ['parent1']
-
-        public static checkServiceParents (parents: ServiceParent = {}): boolean {
-          return super.checkServiceParents(parents)
-        }
       }
 
       const parents: ServiceParent = {parent1: 10, parent2: 'text'}
@@ -260,6 +239,10 @@ describe('models/ServiceModel', () => {
         protected static storeFactory = mockServiceStoreFactory
       }
 
+      class OtherModel extends ServiceModel {
+        public static keyName = 'OtherModel'
+      }
+
       const storeObj = {}
       jest.mock('@/models/ServiceStoreFactory', () => ({
         __esModule: true,
@@ -268,13 +251,109 @@ describe('models/ServiceModel', () => {
 
       const spy = jest.spyOn(store, 'registerModule').mockImplementation()
       expect(TestModel.register()).toBe(true)
+      expect(OtherModel.register()).toBe(true)
       expect(TestModel.register()).toBe(false)
+      expect(OtherModel.register()).toBe(false)
 
       expect(mockServiceStoreFactory.mock.calls).toHaveLength(1)
       expect(mockServiceStoreFactory.mock.calls).toEqual([[15]])
-      expect(store.registerModule).toHaveBeenCalledTimes(1)
-      expect(spy.mock.calls).toEqual([[TestModel.storeName, storeObj]])
+      expect(store.registerModule).toHaveBeenCalledTimes(2)
+      expect(spy.mock.calls[0]).toEqual([TestModel.storeName, storeObj])
       spy.mockRestore()
+    })
+  })
+
+  describe('objects', () => {
+    it('should return ModelManager instance', () => {
+      class TestModel extends ServiceModel {
+      }
+
+      expect(TestModel.objects).toBeInstanceOf(TestModel.ModelManager)
+    })
+
+    it('should return custom ModelManager instance', () => {
+      const customModelManager = class extends ServiceModel.ModelManager {
+      }
+
+      class TestModel extends ServiceModel {
+        public static ModelManager = customModelManager
+      }
+
+      expect(TestModel.objects).toBeInstanceOf(TestModel.ModelManager)
+    })
+  })
+
+  describe('ModelManager', () => {
+    const BASE_URL = 'test-base-url/'
+    const PARENT_BASE_URL = 'test/{parent1}/base/{parent2}/url/'
+
+    class BaseTestModel extends ServiceModel {
+      protected static cacheDuration = 0
+
+      protected static fieldsDef = {
+        text: new Field()
+      }
+    }
+
+    class TestModel extends BaseTestModel {
+      public static keyName = 'TestModel'
+      protected static urls = {
+        BASE: BASE_URL
+      }
+    }
+    TestModel.register()
+
+    class ParentTestModel extends BaseTestModel {
+      public static keyName = 'ParentTestModel'
+      protected static parents = ['parent1', 'parent2']
+      protected static urls = {
+        BASE: PARENT_BASE_URL
+      }
+    }
+    ParentTestModel.register()
+
+    describe('all', () => {
+      it('should request all', async () => {
+        const responseData = [{text: 'Entry 1'}, {text: 'Entry 2'}]
+        const mockedAxios = axios as jest.Mocked<typeof axios>
+        mockedAxios.get.mockResolvedValue({data: responseData})
+
+        const resultData = await TestModel.objects.all()
+
+        expect(mockedAxios.get.mock.calls).toHaveLength(1)
+        expect(mockedAxios.get.mock.calls).toEqual([[BASE_URL]])
+        mockedAxios.get.mockClear()
+
+        expect(resultData).toHaveLength(responseData.length)
+        resultData.forEach((entry: TestModel, index: number) => {
+          expect(entry).toBeInstanceOf(TestModel)
+          const responseEntry = responseData[index]
+          expect(entry.val.text).toBe(responseEntry.text)
+        })
+      })
+
+      it('should request all with parents', async () => {
+        const responseData = [{text: 'Entry 1'}, {text: 'Entry 2'}]
+        const mockedAxios = axios as jest.Mocked<typeof axios>
+        mockedAxios.get.mockResolvedValue({data: responseData})
+        const spy = jest.spyOn(ParentTestModel, 'checkServiceParents')
+
+        const parents: ServiceParent = {parent1: 'parent-1', parent2: 8}
+        const resultData = await ParentTestModel.objects.all(parents)
+
+        expect(spy).toBeCalledTimes(2)
+        expect(mockedAxios.get.mock.calls).toHaveLength(1)
+        expect(mockedAxios.get.mock.calls).toEqual([[cu.format(PARENT_BASE_URL, parents)]])
+        mockedAxios.get.mockClear()
+
+        expect(resultData).toHaveLength(responseData.length)
+        resultData.forEach((entry: ParentTestModel, index: number) => {
+          expect(entry).toBeInstanceOf(ParentTestModel)
+          const responseEntry = responseData[index]
+          expect(entry.val.text).toBe(responseEntry.text)
+        })
+        spy.mockRestore()
+      })
     })
   })
 })

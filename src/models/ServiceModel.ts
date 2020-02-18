@@ -102,7 +102,7 @@ class ServiceModel extends BaseModel {
   /**
    * Manager class of model
    */
-  protected static ModelManager = class {
+  public static ModelManager = class {
     protected model: typeof ServiceModel
 
     constructor (model: typeof ServiceModel) {
@@ -170,7 +170,7 @@ class ServiceModel extends BaseModel {
    * Check whether all required parent values have been given
    * @param parents
    */
-  protected static checkServiceParents (parents: ServiceParent = {}): boolean {
+  public static checkServiceParents (parents: ServiceParent = {}): boolean {
     if (this.parents.length < Object.keys(parents).length) {
       console.warn('Too much parents given', this.name, parents)
       return false
