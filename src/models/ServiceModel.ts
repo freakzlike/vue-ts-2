@@ -155,7 +155,8 @@ class ServiceModel extends BaseModel {
         key: filterKey,
         sendRequest: async (options: ServiceStoreOptions): Promise<Array<Dictionary<any>>> => {
           const url = await this.model.getListUrl(parents)
-          const response = await axios.get(url)
+          const config = Object.keys(filterParams).length ? {params: filterParams} : {}
+          const response = await axios.get(url, config)
 
           return response.data
         }

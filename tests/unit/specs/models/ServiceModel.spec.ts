@@ -301,6 +301,7 @@ describe('models/ServiceModel', () => {
         BASE: BASE_URL
       }
     }
+
     TestModel.register()
 
     class ParentTestModel extends BaseTestModel {
@@ -310,6 +311,7 @@ describe('models/ServiceModel', () => {
         BASE: PARENT_BASE_URL
       }
     }
+
     ParentTestModel.register()
 
     describe('all', () => {
@@ -321,7 +323,7 @@ describe('models/ServiceModel', () => {
         const resultData = await TestModel.objects.all()
 
         expect(mockedAxios.get.mock.calls).toHaveLength(1)
-        expect(mockedAxios.get.mock.calls).toEqual([[BASE_URL]])
+        expect(mockedAxios.get.mock.calls).toEqual([[BASE_URL, {}]])
         mockedAxios.get.mockClear()
 
         expect(resultData).toHaveLength(responseData.length)
@@ -343,7 +345,7 @@ describe('models/ServiceModel', () => {
 
         expect(spy).toBeCalledTimes(2)
         expect(mockedAxios.get.mock.calls).toHaveLength(1)
-        expect(mockedAxios.get.mock.calls).toEqual([[cu.format(PARENT_BASE_URL, parents)]])
+        expect(mockedAxios.get.mock.calls).toEqual([[cu.format(PARENT_BASE_URL, parents), {}]])
         mockedAxios.get.mockClear()
 
         expect(resultData).toHaveLength(responseData.length)
@@ -352,6 +354,92 @@ describe('models/ServiceModel', () => {
           const responseEntry = responseData[index]
           expect(entry.val.text).toBe(responseEntry.text)
         })
+        spy.mockRestore()
+      })
+    })
+
+    describe('filter', () => {
+      it('should request filter list', async () => {
+        const responseData = [{text: 'Entry 1'}, {text: 'Entry 2'}]
+        const filterParams = {name: 'text'}
+        const mockedAxios = axios as jest.Mocked<typeof axios>
+        mockedAxios.get.mockResolvedValue({data: responseData})
+
+        const resultData = await TestModel.objects.filter(filterParams)
+
+        expect(mockedAxios.get.mock.calls).toHaveLength(1)
+        expect(mockedAxios.get.mock.calls).toEqual([[BASE_URL, {params: filterParams}]])
+        mockedAxios.get.mockClear()
+
+        expect(resultData).toHaveLength(responseData.length)
+        resultData.forEach((entry: TestModel, index: number) => {
+          expect(entry).toBeInstanceOf(TestModel)
+          const responseEntry = responseData[index]
+          expect(entry.val.text).toBe(responseEntry.text)
+        })
+      })
+
+      it('should request all with parents', async () => {
+        const responseData = [{text: 'Entry 1'}, {text: 'Entry 2'}]
+        const filterParams = {name: 'text'}
+        const mockedAxios = axios as jest.Mocked<typeof axios>
+        mockedAxios.get.mockResolvedValue({data: responseData})
+        const spy = jest.spyOn(ParentTestModel, 'checkServiceParents')
+
+        const parents: ServiceParent = {parent1: 'parent-1', parent2: 8}
+        const resultData = await ParentTestModel.objects.filter(filterParams, parents)
+
+        expect(spy).toBeCalledTimes(2)
+        expect(mockedAxios.get.mock.calls).toHaveLength(1)
+        expect(mockedAxios.get.mock.calls).toEqual([[cu.format(PARENT_BASE_URL, parents), {params: filterParams}]])
+        mockedAxios.get.mockClear()
+
+        expect(resultData).toHaveLength(responseData.length)
+        resultData.forEach((entry: ParentTestModel, index: number) => {
+          expect(entry).toBeInstanceOf(ParentTestModel)
+          const responseEntry = responseData[index]
+          expect(entry.val.text).toBe(responseEntry.text)
+        })
+        spy.mockRestore()
+      })
+    })
+
+    describe('get', () => {
+      it('should request detail', async () => {
+        const pk = 1
+        const responseData = {text: 'Entry 1'}
+        const mockedAxios = axios as jest.Mocked<typeof axios>
+        mockedAxios.get.mockResolvedValue({data: responseData})
+
+        const entry = await TestModel.objects.get(pk)
+
+        const url = BASE_URL + pk + '/'
+        expect(mockedAxios.get.mock.calls).toHaveLength(1)
+        expect(mockedAxios.get.mock.calls).toEqual([[url]])
+        mockedAxios.get.mockClear()
+
+        expect(entry).toBeInstanceOf(TestModel)
+        expect(entry.val.text).toBe(responseData.text)
+      })
+
+      it('should request detail with parents', async () => {
+        const pk = 1
+        const responseData = {text: 'Entry 1'}
+        const mockedAxios = axios as jest.Mocked<typeof axios>
+        mockedAxios.get.mockResolvedValue({data: responseData})
+        const spy = jest.spyOn(ParentTestModel, 'checkServiceParents')
+
+        const parents: ServiceParent = {parent1: 'parent-1', parent2: 8}
+        const entry = await ParentTestModel.objects.get(pk, parents)
+
+        const url = cu.format(PARENT_BASE_URL, parents) + pk + '/'
+        expect(spy).toBeCalledTimes(2)
+        expect(mockedAxios.get.mock.calls).toHaveLength(1)
+        expect(mockedAxios.get.mock.calls).toEqual([[url]])
+        mockedAxios.get.mockClear()
+
+        expect(entry).toBeInstanceOf(ParentTestModel)
+        expect(entry.val.text).toBe(responseData.text)
         spy.mockRestore()
       })
     })
