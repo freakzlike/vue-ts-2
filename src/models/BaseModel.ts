@@ -29,7 +29,22 @@ class BaseModel extends BaseClass {
   /**
    * Flag whether model has be registered or not
    */
-  protected static _modelRegistered: boolean = false
+  private static __modelRegistered: boolean = false
+
+  /**
+   * Getter to simulate static class property with fixed inheritance
+   */
+  protected static get _modelRegistered (): boolean {
+    // Check whether model has property __modelRegistered and not inherited from super class
+    return Object.prototype.hasOwnProperty.call(this, '__modelRegistered') ? this.__modelRegistered : false
+  }
+
+  /**
+   * Setter to simulate static class property with fixed inheritance
+   */
+  protected static set _modelRegistered (v: boolean) {
+    this.__modelRegistered = v
+  }
 
   /**
    * Model data

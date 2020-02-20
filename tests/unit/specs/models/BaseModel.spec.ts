@@ -105,8 +105,22 @@ describe('models/BaseModel', () => {
         public static keyName = 'TestModel'
       }
 
+      class OtherTestModel extends BaseModel {
+        public static keyName = 'OtherTestModel'
+      }
+
+      class NestedTestModel extends TestModel {
+        public static keyName = 'NestedTestModel'
+      }
+
       expect(TestModel.register()).toBe(true)
       expect(TestModel.register()).toBe(false)
+
+      expect(OtherTestModel.register()).toBe(true)
+      expect(OtherTestModel.register()).toBe(false)
+
+      expect(NestedTestModel.register()).toBe(true)
+      expect(NestedTestModel.register()).toBe(false)
     })
   })
 
