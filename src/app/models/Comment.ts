@@ -13,7 +13,5 @@ class Comment extends ServiceModel {
   }
 }
 
-Comment.register()
-
 export default Comment
 export {Comment}

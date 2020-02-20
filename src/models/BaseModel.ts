@@ -68,9 +68,7 @@ class BaseModel extends BaseClass {
       console.warn('Missing keyName for Model', this.constructor.name)
     }
 
-    if (!this.cls._modelRegistered) {
-      console.warn('Model is not registered', this.constructor.name)
-    }
+    this.cls.register()
 
     this._bindFields()
   }

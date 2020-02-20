@@ -95,6 +95,8 @@ class ServiceModel extends BaseModel {
    * Retrieve instance of ModelManager
    */
   public static get objects () {
+    this.register()
+
     const ServiceClass = this.ModelManager
     return new ServiceClass(this)
   }
@@ -203,6 +205,8 @@ class ServiceModel extends BaseModel {
    * @param payload
    */
   public static storeDispatch (action: string, payload?: any): Promise<any> {
+    this.register()
+
     const actionName = this.storeName + '/' + action
     return store.dispatch(actionName, payload)
   }

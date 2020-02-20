@@ -17,7 +17,5 @@ class Post extends ServiceModel {
   }
 }
 
-Post.register()
-
 export default Post
 export {Post}

@@ -10,8 +10,6 @@ describe('models/BaseModel', () => {
         public static keyName = 'TestModel'
       }
 
-      TestModel.register()
-
       const data = {a: 1}
       const model = new TestModel(data)
       expect(model).toBeInstanceOf(BaseModel)
@@ -28,8 +26,6 @@ describe('models/BaseModel', () => {
       class TestModel extends BaseModel {
         public static keyName = 'TestModel'
       }
-
-      TestModel.register()
 
       const model = new TestModel()
       expect(model).toBeInstanceOf(BaseModel)
@@ -50,10 +46,9 @@ describe('models/BaseModel', () => {
       const model = new TestModel(data)
       expect(model).toBeInstanceOf(BaseModel)
 
-      expect(console.warn).toHaveBeenCalledTimes(2)
+      expect(console.warn).toHaveBeenCalledTimes(1)
       expect(spy.mock.calls).toEqual([
-        ['Missing keyName for Model', 'TestModel'],
-        ['Model is not registered', 'TestModel']
+        ['Missing keyName for Model', 'TestModel']
       ])
 
       spy.mockRestore()
@@ -74,8 +69,6 @@ describe('models/BaseModel', () => {
           field1: new Field1()
         }
       }
-
-      TestModel.register()
 
       const model = new TestModel()
 
@@ -140,7 +133,6 @@ describe('models/BaseModel', () => {
         }
       }
 
-      TestModel.register()
       const model = new TestModel(data)
       expect(model.val.name).toBe(data.name)
       expect(model.val.obj).toBe(data.obj)
@@ -159,8 +151,6 @@ describe('models/BaseModel', () => {
         name: new NameField()
       }
     }
-
-    TestModel.register()
 
     const model = new TestModel()
 
